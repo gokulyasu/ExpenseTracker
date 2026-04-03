@@ -38,7 +38,14 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
     );
     const unsub = onSnapshot(q, (snap) => {
       const txns = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction));
-      setTransactions(txns);
+      const sortedTxns = txns.sort((a, b) => {
+      // For descending order (newest first):
+      return b.date.localeCompare(a.date);
+      
+      // OR if you want ascending order:
+      // return a.date.localeCompare(b.date);
+    });
+      setTransactions(sortedTxns);
       setLoading(false);
     }, () => setLoading(false));
     return unsub;

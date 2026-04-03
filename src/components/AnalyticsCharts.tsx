@@ -17,7 +17,7 @@ const COLORS = [
 type FilterType = "daily" | "weekly" | "monthly" | "yearly";
 
 export default function AnalyticsCharts() {
-  const { transactions, totalCredit, totalDebit } = useTransactions();
+  const { transactions, totalCredit, totalDebit,updateTransaction,deleteTransaction } = useTransactions();
   const { currentBudget } = useBudget();
   const [filter, setFilter] = useState<FilterType>("monthly");
   const [insight, setInsight] = useState<string | null>(null);
@@ -77,6 +77,31 @@ export default function AnalyticsCharts() {
     setInsightLoading(false);
   };
 
+
+  const handleEdit = async (t) => {
+  const newAmount = prompt("Enter new amount", String(t.amount));
+  if (!newAmount) return;
+
+  try {
+    await updateTransaction(t.id, {
+      ...t,
+      amount: parseFloat(newAmount),
+    });
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const handleDelete = async (id: string) => {
+  try {
+    await deleteTransaction(id);
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+
+
   return (
     <div className="space-y-5">
       {/* Filter */}
@@ -85,11 +110,10 @@ export default function AnalyticsCharts() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-              filter === f
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${filter === f
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
@@ -218,6 +242,73 @@ export default function AnalyticsCharts() {
           >
             {insight}
           </motion.div>
+        )}
+      </motion.div>
+
+      {/* Transactions List */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="rounded-2xl border border-border bg-card p-4"
+      >
+        <h3 className="mb-3 font-heading text-sm font-semibold">
+          All Transactions
+        </h3>
+
+        {transactions.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No transactions found
+          </p>
+        ) : (
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {transactions.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center justify-between rounded-lg border border-border p-3"
+              >
+                <div>
+                  <p className="text-sm font-medium">{t.subcategory}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {t.date}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">{t.notes}</p>
+
+                </div>
+
+                <p
+                  className={`text-sm font-semibold ${t.type === "credit"
+                    ? "text-credit"
+                    : "text-debit"
+                    }`}
+                >
+                  {t.type === "credit" ? "+" : "-"}₹
+                  {t.amount.toLocaleString("en-IN")}
+                </p>
+
+<div>
+                {/* Edit */}
+                <button
+                  onClick={() => handleEdit(t)}
+                  className="text-xs text-blue-500 hover:underline"
+                >
+                  ✏️Edit
+                </button>
+
+                {/* Delete */}
+                <button
+                  onClick={() => handleDelete(t.id)}
+                  className="text-xs text-red-500 hover:underline"
+                >
+                  🗑 Delete
+                </button>
+                </div>
+              </div>
+
+            ))}
+          </div>
         )}
       </motion.div>
     </div>

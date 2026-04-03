@@ -1,5 +1,6 @@
 // Google Gemini AI integration for financial insights
 // Calls are made only from the Analytics screen with summarized data
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
@@ -30,35 +31,37 @@ function setCache(key: string, data: string) {
 }
 
 async function callGemini(prompt: string): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    return "Gemini API key not configured. Add VITE_GEMINI_API_KEY to your environment.";
-  }
-
+  let text;
   try {
-    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 512,
-        },
-      }),
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-flash-latest"
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error("Gemini API error:", err);
-      return "Unable to generate insight at this time.";
+    const result = await model.generateContent(prompt);
+
+    if (!result || !result.response) {
+      // throw new Error("Invalid response from Gemini API");
+      text = "Invalid response from AI";
     }
 
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "No insight generated.";
-  } catch (error) {
-    console.error("Gemini fetch error:", error);
-    return "Unable to connect to AI service.";
+    const response = await result.response;
+    text = response.text();
+
+    if (!text) {
+      text = "Empty response from AI";
+      // throw new Error("Empty response from Gemini");
+    }
+
+
+
+  } catch (error: any) {
+    console.error("Gemini Error:", error?.message || error);
+    // throw new Error("Failed to fetch response from Gemini");
+    text = "Failed to fetch response from AI";
   }
+  return text;
 }
 
 export async function getMonthlyInsight(summary: AISummary): Promise<string> {

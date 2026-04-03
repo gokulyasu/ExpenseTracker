@@ -33,8 +33,8 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
     }
     const q = query(
       collection(db, "transactions"),
-      where("userId", "==", user.uid),
-      orderBy("date", "desc")
+      where("userId", "==", user.uid)
+      // orderBy("date", "desc")
     );
     const unsub = onSnapshot(q, (snap) => {
       const txns = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction));
@@ -47,12 +47,14 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
   const addTransaction = useCallback(async (t: Omit<Transaction, "id" | "userId" | "createdAt" | "updatedAt">) => {
     if (!user) return;
     const now = new Date().toISOString();
-    await addDoc(collection(db, "transactions"), {
+    const transactionData = {
       ...t,
       userId: user.uid,
       createdAt: now,
       updatedAt: now,
-    });
+    };
+    // console.log("Transaction data being sent to Firestore:", transactionData); // <-- Add this line
+    await addDoc(collection(db, "transactions"), transactionData);
   }, [user]);
 
   const updateTransaction = useCallback(async (id: string, t: Partial<Transaction>) => {

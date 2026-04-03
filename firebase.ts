@@ -1,0 +1,1 @@
+if (location.hostname === "localhost") { connectFirestoreEmulator(db, 'localhost', 8080); connectAuthEmulator(auth, 'http://localhost:9099'); }

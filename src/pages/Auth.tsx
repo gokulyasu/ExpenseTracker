@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useSubcategories } from "@/contexts/SubcategoryContext";
 
 export default function Auth() {
-  const { user, signIn, signUp, loading } = useAuth();
+  const { user, signIn, signUp, loading,googleSignIn } = useAuth();
   const { initializeDefaults, subcategories } = useSubcategories();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -16,7 +16,16 @@ export default function Auth() {
 
   if (loading) return null;
   if (user) return <Navigate to="/" replace />;
-
+const handleGoogleLogin = async () => {
+  setSubmitting(true);
+  try {
+    await googleSignIn();
+    toast.success("Signed in with Google!");
+  } catch (err: any) {
+    toast.error(err.message || "Google sign-in failed");
+  }
+  setSubmitting(false);
+};
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -103,6 +112,34 @@ export default function Auth() {
           >
             {submitting ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </motion.button>
+          {/* Divider */}
+<div className="relative my-4">
+  <div className="absolute inset-0 flex items-center">
+    <span className="w-full border-t" />
+  </div>
+  <div className="relative flex justify-center text-xs uppercase">
+    <span className="bg-background px-2 text-muted-foreground">Or</span>
+  </div>
+</div>
+
+{/* Google Button */}
+<motion.button
+  whileTap={{ scale: 0.98 }}
+  type="button"
+  onClick={handleGoogleLogin}
+  disabled={submitting}
+  className="w-full flex items-center justify-center gap-3 rounded-xl border border-input bg-card py-3 text-sm font-medium shadow-sm hover:bg-muted transition disabled:opacity-50"
+>
+  {/* Google Logo */}
+  <svg className="h-5 w-5" viewBox="0 0 48 48">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.36 1.22 8.29 3.04l6.2-6.2C34.64 2.64 29.74 0 24 0 14.64 0 6.73 5.4 2.69 13.26l7.21 5.6C11.7 12.14 17.33 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.14-3.14-.4-4.64H24v9.3h12.7c-.55 2.96-2.23 5.48-4.75 7.18l7.3 5.68C43.9 37.36 46.5 31.46 46.5 24.5z"/>
+    <path fill="#FBBC05" d="M9.9 28.86A14.5 14.5 0 0 1 9.5 24c0-1.68.29-3.3.8-4.86l-7.21-5.6A23.94 23.94 0 0 0 0 24c0 3.87.93 7.53 2.69 10.74l7.21-5.6z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.92-2.14 15.89-5.82l-7.3-5.68c-2.03 1.36-4.64 2.16-8.59 2.16-6.67 0-12.3-2.64-15.1-9.36l-7.21 5.6C6.73 42.6 14.64 48 24 48z"/>
+  </svg>
+
+  Continue with Google
+</motion.button>
         </form>
 
         <p className="mt-5 text-center text-xs text-muted-foreground">

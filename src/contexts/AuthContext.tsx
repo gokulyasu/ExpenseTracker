@@ -6,6 +6,7 @@ import {
   signOut as firebaseSignOut,
   updateProfile,
   User,
+  signInWithPopup, GoogleAuthProvider
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -18,7 +19,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
+  googleSignIn: () => Promise<void>;
 }
+
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -64,8 +67,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
   }, []);
 
+
+  const googleSignIn = useCallback(async () => {
+    const provider = new GoogleAuthProvider();
+
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Check if user already exists in Firestore
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+      const userProfile: UserProfile = {
+        id: user.uid,
+        name: user.displayName || "User",
+        email: user.email || "",
+      };
+
+      await setDoc(userRef, userProfile);
+      setProfile(userProfile);
+    } else {
+      setProfile(snap.data() as UserProfile);
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, googleSignIn }}>
       {children}
     </AuthContext.Provider>
   );

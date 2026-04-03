@@ -38,7 +38,7 @@ export default function TransactionForm() {
       setAmount("");
       setSubcategory("");
       setNotes("");
-    } catch {
+    } catch(error) {
       toast.error("Failed to add transaction");
     }
     setSubmitting(false);
